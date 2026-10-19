@@ -1,2 +1,2 @@
 # browser_desensitization
-浏览器文字托名
+浏览器文字脱敏插件
