@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>本地敏感词脱敏助手</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>本地脱敏助手</h1>
+        <span>仅本地处理</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="enabled" checked>
+        <span aria-hidden="true"></span>
+      </label>
+    </header>
+
+    <section class="commands">
+      <button type="button" id="copy">脱敏复制</button>
+      <button type="button" id="replace">脱敏替换</button>
+      <button type="button" id="workbench" class="wide">打开本地工作台</button>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>本地词库</h2>
+        <div>
+          <button type="button" id="import">导入</button>
+          <button type="button" id="export">导出</button>
+          <button type="button" id="reset">内置</button>
+        </div>
+      </div>
+      <input type="file" id="dictionary" accept=".json,application/json" hidden>
+      <p id="summary">JSON 词库保存在本机扩展存储中。</p>
+    </section>
+
+    <p id="status" role="status"></p>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

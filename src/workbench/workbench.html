@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>本地脱敏工作台</title>
+  <link rel="stylesheet" href="workbench.css">
+</head>
+<body>
+  <header>
+    <div>
+      <h1>本地脱敏工作台</h1>
+      <p>所有解析和替换都在本浏览器完成</p>
+    </div>
+    <div class="actions">
+      <button type="button" id="import">导入词库</button>
+      <button type="button" id="export">导出词库</button>
+      <button type="button" id="reset">内置词库</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="text-pane">
+      <label for="input">待处理文本</label>
+      <textarea id="input" placeholder="粘贴需要本地脱敏的文本" spellcheck="false"></textarea>
+      <div class="actions">
+        <button type="button" id="redact" class="primary">本地脱敏</button>
+        <button type="button" id="copy" disabled>复制结果</button>
+        <button type="button" id="download" disabled>下载结果</button>
+      </div>
+      <output id="output" aria-live="polite"></output>
+      <p id="status" role="status"></p>
+    </section>
+
+    <section class="file-pane">
+      <div id="dropzone" tabindex="0" role="button" aria-label="选择或拖入文件">
+        <span>选择或拖入文件</span>
+        <small>docx · xlsx · md · txt · csv · xml · yml · sql · 代码文件</small>
+      </div>
+      <input type="file" id="file" multiple hidden>
+      <ul id="file-results"></ul>
+    </section>
+  </main>
+
+  <input type="file" id="dictionary" accept=".json,application/json" hidden>
+  <script src="workbench.js"></script>
+</body>
+</html>

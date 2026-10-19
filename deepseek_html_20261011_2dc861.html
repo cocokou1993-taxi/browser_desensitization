@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>本地敏感词过滤与脱敏工具 需求文档 V0.2</title>
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --card: #ffffff;
+    --text: #1f2328;
+    --muted: #57606a;
+    --border: #d0d7de;
+    --accent: #0969da;
+    --accent-soft: #ddf4ff;
+    --warn: #9a6700;
+    --warn-soft: #fff8c5;
+    --ok: #1a7f37;
+    --ok-soft: #dafbe1;
+    --danger: #cf222e;
+    --danger-soft: #ffebe9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+                 "PingFang SC", "Hiragino Sans GB", Arial, sans-serif;
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+  header.doc-header {
+    background: linear-gradient(135deg, #0969da 0%, #218bff 100%);
+    color: #fff;
+    border-radius: 12px;
+    padding: 32px 36px;
+    margin-bottom: 28px;
+    box-shadow: 0 6px 20px rgba(9,105,218,.18);
+  }
+  header.doc-header h1 {
+    margin: 0 0 12px;
+    font-size: 27px;
+    letter-spacing: .5px;
+  }
+  header.doc-header .meta {
+    font-size: 13.5px;
+    opacity: .95;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+  }
+  header.doc-header .meta span::before {
+    content: "· ";
+    opacity: .7;
+  }
+  header.doc-header .meta span:first-child::before { content: ""; }
+
+  section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin-bottom: 22px;
+    box-shadow: 0 1px 3px rgba(27,31,36,.04);
+  }
+  h2 {
+    font-size: 20px;
+    margin: 0 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--accent-soft);
+    color: #0a3069;
+  }
+  h3 {
+    font-size: 16.5px;
+    margin: 22px 0 10px;
+    color: #0a3069;
+  }
+  h4 {
+    font-size: 15px;
+    margin: 16px 0 8px;
+    color: var(--muted);
+  }
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 5px 0; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 9px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #f6f8fa;
+    font-weight: 600;
+    color: #0a3069;
+    white-space: nowrap;
+  }
+  tr:nth-child(even) td { background: #fbfcfd; }
+
+  code {
+    background: #eff2f5;
+    padding: 1.5px 6px;
+    border-radius: 5px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 13px;
+    color: #953800;
+  }
+  pre {
+    background: #f6f8fa;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  pre code { background: none; padding: 0; color: #1f2328; }
+
+  .badge {
+    display: inline-block;
+    padding: 1px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.8;
+    vertical-align: middle;
+  }
+  .b-ok    { background: var(--ok-soft);     color: var(--ok); }
+  .b-warn  { background: var(--warn-soft);   color: var(--warn); }
+  .b-info  { background: var(--accent-soft); color: var(--accent); }
+  .b-danger{ background: var(--danger-soft); color: var(--danger); }
+
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  .callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .callout.danger { border-color: var(--danger); background: var(--danger-soft); }
+
+  .adr {
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--accent);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    background: #fcfdff;
+  }
+  .adr h4 {
+    margin: 0 0 10px;
+    font-size: 15.5px;
+    color: #0a3069;
+  }
+  .adr .status {
+    float: right;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--ok-soft);
+    color: var(--ok);
+  }
+  .adr .status.proposed { background: var(--warn-soft); color: var(--warn); }
+  .adr dl { margin: 0; }
+  .adr dt {
+    font-weight: 600;
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 10px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+  .adr dd { margin: 4px 0 0; padding-left: 0; }
+
+  .qa-item {
+    border-bottom: 1px dashed var(--border);
+    padding: 12px 0;
+  }
+  .qa-item:last-child { border-bottom: none; }
+  .qa-q {
+    font-weight: 600;
+    color: #0a3069;
+  }
+  .qa-a {
+    color: var(--text);
+    margin-top: 4px;
+    padding-left: 14px;
+    border-left: 3px solid var(--ok-soft);
+  }
+
+  .toc {
+    background: #f6f8fa;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 22px;
+    font-size: 14px;
+  }
+  .toc ol { margin: 6px 0; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+
+  footer.doc-footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 36px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media print {
+    body { background: #fff; font-size: 12pt; }
+    .wrap { max-width: none; padding: 0; }
+    section { border: none; box-shadow: none; padding: 0 0 14px; page-break-inside: avoid; }
+    header.doc-header { box-shadow: none; }
+    .toc { display: none; }
+    .adr { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ======================= 文档头 ======================= -->
+<header class="doc-header">
+  <h1>本地敏感词过滤与脱敏工具 · 需求文档</h1>
+  <div class="meta">
+    <span>版本：V0.2</span>
+    <span>状态：范围收敛稿（待 4 项确认后定稿）</span>
+    <span>实现范围：Chrome 浏览器插件</span>
+    <span>平台：Windows 10/11</span>
+    <span>核心约束：本地处理 · 绝对不联网 · 禁止遥测</span>
+  </div>
+</header>
+
+<!-- ======================= 目录 ======================= -->
+<nav class="toc">
+  <strong>目录</strong>
+  <ol>
+    <li><a href="#s1">产品定位</a></li>
+    <li><a href="#s2">第一版范围</a></li>
+    <li><a href="#s3">浏览器插件功能</a></li>
+    <li><a href="#s4">词库与匹配规则</a></li>
+    <li><a href="#s5">脱敏策略</a></li>
+    <li><a href="#s6">文件与代码处理</a></li>
+    <li><a href="#s7">非功能需求</a></li>
+    <li><a href="#s8">验收标准</a></li>
+    <li><a href="#s9">里程碑</a></li>
+    <li><a href="#s10">待确认问题</a></li>
+    <li><a href="#appendix-a">附录 A：讨论与确认问题记录</a></li>
+    <li><a href="#appendix-b">附录 B：架构决策记录（ADR）</a></li>
+  </ol>
+</nav>
+
+<!-- ======================= 1 ======================= -->
+<section id="s1">
+  <h2>1. 产品定位</h2>
+  <p>一个<strong>本地处理、不上传、不联网、无遥测</strong>的敏感词检测与脱敏工具。</p>
+  <ul>
+    <li><strong>唯一实现形态：</strong>Chrome 浏览器插件（Manifest V3）。</li>
+    <li><strong>处理边界：</strong>本地规则检测与本地脱敏，不对接大模型或云端服务。</li>
+    <li><strong>词库共享：</strong>JSON 文件手动拷贝，适合个人与小团队。</li>
+    <li><strong>目标用户：</strong>个人开发者、小团队，统一词库、无需审计。</li>
+  </ul>
+  <div class="callout">
+    <strong>设计原则：</strong>可编译运行优先 &gt; 完全脱敏；原文件不修改；关闭即不处理。
+  </div>
+</section>
+
+<!-- ======================= 2 ======================= -->
+<section id="s2">
+  <h2>2. 第一版范围</h2>
+
+  <h3>2.1 支持</h3>
+  <table>
+    <thead>
+      <tr><th>维度</th><th>内容</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>产品形态</td><td>仅实现 Chrome 浏览器插件（Manifest V3），Windows 10/11 优先</td></tr>
+      <tr><td>词库</td><td>JSON 本地存储，手动导入，手动拷贝共享</td></tr>
+      <tr><td>办公/文本格式</td><td><code>docx</code>、<code>xlsx</code>、<code>md</code>、<code>txt</code>、<code>csv</code>、<code>xml</code>、<code>yml</code>、<code>sql</code></td></tr>
+      <tr><td>代码文件</td><td>处理英文与中文，覆盖字符串、注释、标识符</td></tr>
+      <tr><td>输出</td><td>原文件名 <code>.redacted.ext</code>，不覆盖原文件</td></tr>
+      <tr><td>输入输出形态</td><td>文本：流进流出；二进制文件：文件进文件出</td></tr>
+      <tr><td>编码</td><td>UTF-8、GBK</td></tr>
+      <tr><td>并发</td><td>单次任务一次一个文件</td></tr>
+      <tr><td>网络</td><td>运行时绝对不联网、禁止遥测；插件更新可联网</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.2 不支持（第一版明确排除）</h3>
+  <ul>
+    <li><code>doc</code>、<code>xls</code> 旧格式</li>
+    <li>PDF、压缩包、扫描件 OCR</li>
+    <li>大模型对接、请求掩码、返回反向替换与还原（明确排除）</li>
+    <li>审计、报告、Git 扫描、CI/CD 集成</li>
+    <li>简繁转换、拼音、谐音匹配（后续版本）</li>
+    <li>CLI、桌面客户端、云端服务等其他形态</li>
+  </ul>
+</section>
+
+<!-- ======================= 3 ======================= -->
+<section id="s3">
+  <h2>3. 浏览器插件功能</h2>
+  <p>插件核心功能为 <strong>A、C、D</strong> 三项；检测、匹配、替换和文件解析均在插件本地完成，不调用大模型或远程接口。</p>
+
+  <h3>A. 网页输入框 / 剪贴板脱敏</h3>
+  <ul>
+    <li>检测页面输入框、文本域、可编辑区域。</li>
+    <li>提供「脱敏复制」「脱敏替换」两种动作。</li>
+    <li><strong>插件关闭时不处理、不注入、不拦截。</strong></li>
+  </ul>
+
+  <h3>C. 上传文件前脱敏</h3>
+  <ul>
+    <li>检测文件上传控件、拖拽上传区域。</li>
+    <li>本地解析文件并生成脱敏副本。</li>
+    <li>默认提示用户确认后上传或下载副本，<strong>不静默替换</strong>。</li>
+    <li>输出文件名：<code>原文件名.redacted.ext</code>。</li>
+  </ul>
+
+  <h3>D. 内置本地脱敏工作台</h3>
+  <ul>
+    <li>支持粘贴文本或拖拽文件，本地脱敏后复制或下载。</li>
+    <li>不对接大模型，D 已定义为「本地脱敏工作台」，不提供聊天或远程推理能力。</li>
+  </ul>
+
+  <h3>总开关</h3>
+  <table>
+    <thead><tr><th>状态</th><th>行为</th></tr></thead>
+    <tbody>
+      <tr><td>插件打开</td><td>启用拦截与脱敏</td></tr>
+      <tr><td>插件关闭</td><td>所有页面不处理、不注入、不拦截</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ======================= 4 ======================= -->
+<section id="s4">
+  <h2>4. 词库与匹配规则</h2>
+
+  <h3>4.1 词库</h3>
+  <ul>
+    <li><strong>格式：</strong>JSON。</li>
+    <li><strong>内置：</strong>政治合规词库，可新增。</li>
+    <li><strong>自定义：</strong>API Key、手机号、身份证、邮箱、公司名、商业机密、其他敏感词。</li>
+    <li><strong>白名单：</strong>人工维护。</li>
+    <li><strong>共享方式：</strong>手动拷贝 JSON 文件，无云端同步。</li>
+  </ul>
+
+  <h3>4.2 匹配能力（第一版）</h3>
+  <ul>
+    <li>正则表达式</li>
+    <li>大小写不敏感</li>
+    <li>全半角归一</li>
+    <li>分组、分级、优先级</li>
+  </ul>
+
+  <h3>4.3 优先级</h3>
+  <ol>
+    <li><strong>政治敏感词</strong>（最高）</li>
+    <li><strong>白名单</strong></li>
+    <li>普通敏感词、正则、公司名、商业机密等</li>
+  </ol>
+
+  <div class="callout warn">
+    <strong>待确认：</strong>政治敏感词命中时，白名单是否也不能豁免？当前按「不能豁免」处理。
+  </div>
+
+  <h3>4.4 词库 JSON 结构示意</h3>
+<pre><code>{
+  "version": "1.0.0",
+  "updatedAt": "2026-10-11",
+  "groups": [
+    {
+      "id": "political",
+      "name": "政治合规词库",
+      "priority": 100,
+      "builtin": true,
+      "rules": [
+        { "type": "keyword", "value": "示例词", "mask": "char" }
+      ]
+    },
+    {
+      "id": "pii",
+      "name": "个人敏感信息",
+      "priority": 50,
+      "rules": [
+        { "type": "regex", "value": "1[3-9]\\d{9}", "mask": "phone" },
+        { "type": "regex", "value": "\\d{17}[\\dXx]", "mask": "idcard" },
+        { "type": "regex", "value": "[\\w.+-]+@[\\w-]+\\.[\\w.]+", "mask": "email" }
+      ]
+    }
+  ],
+  "whitelist": ["允许出现的词"],
+  "customKeywords": [
+    { "type": "keyword", "value": "某公司", "mask": "star3" }
+  ]
+}</code></pre>
+</section>
+
+<!-- ======================= 5 ======================= -->
+<section id="s5">
+  <h2>5. 脱敏策略</h2>
+  <table>
+    <thead>
+      <tr><th>类型</th><th>脱敏方式</th><th>示例</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>手机号</td><td>保留长度掩码</td><td><code>138****1234</code></td></tr>
+      <tr><td>身份证</td><td>保留长度掩码</td><td><code>110101********1234</code></td></tr>
+      <tr><td>邮箱</td><td>局部掩码</td><td><code>a***@domain.com</code></td></tr>
+      <tr><td>API Key</td><td>逐字符替换为 <code>*</code></td><td><code>sk-****************</code></td></tr>
+      <tr><td>政治敏感词</td><td>逐字符替换为 <code>*</code></td><td><code>****</code></td></tr>
+      <tr><td>公司名、商业机密、其他敏感词</td><td>替换为 <code>***</code></td><td><code>***</code></td></tr>
+      <tr><td>办公文件</td><td>不可逆</td><td>—</td></tr>
+      <tr><td>代码字符串 / 注释</td><td>替换敏感内容</td><td>—</td></tr>
+      <tr><td>代码标识符</td><td>安全重命名并同步引用；无法安全处理时提示人工确认</td><td>—</td></tr>
+      <tr><td>代码可编译运行</td><td>优先保证</td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <strong>范围边界：</strong>本方案仅使用本地词库和规则完成脱敏；不对接大模型，不生成可逆映射，也不实现「请求前掩码 → 返回后反向还原」。
+  </div>
+</section>
+
+<!-- ======================= 6 ======================= -->
+<section id="s6">
+  <h2>6. 文件与代码处理</h2>
+
+  <h3>6.1 办公与文本文件</h3>
+  <ul>
+    <li>第一版支持：<code>docx</code>、<code>xlsx</code>、<code>md</code>、<code>txt</code>、<code>csv</code>、<code>xml</code>、<code>yml</code>、<code>sql</code>。</li>
+    <li>输出格式与输入一致。</li>
+    <li>不覆盖原文件。</li>
+  </ul>
+
+  <h3>6.2 代码文件</h3>
+  <ul>
+    <li>处理语言范围：英文与中文。</li>
+    <li><strong>字符串、注释：</strong>直接替换。</li>
+    <li><strong>标识符：</strong>安全重命名并同步引用。</li>
+    <li>无法保证编译运行时，提示人工确认。</li>
+    <li><strong>第一版支持的代码语言待确认</strong>（如 JS、TS、Python、Java、Go）。</li>
+  </ul>
+</section>
+
+<!-- ======================= 7 ======================= -->
+<section id="s7">
+  <h2>7. 非功能需求</h2>
+  <table>
+    <thead><tr><th>类别</th><th>要求</th></tr></thead>
+    <tbody>
+      <tr><td>数据安全</td><td>文件、文本、词库、临时数据不上传</td></tr>
+      <tr><td>网络</td><td>运行时无网络请求、无遥测；插件更新可联网</td></tr>
+      <tr><td>原文件保护</td><td>原文件不修改，输出独立副本</td></tr>
+      <tr><td>临时文件</td><td>用后清理</td></tr>
+      <tr><td>编码</td><td>UTF-8、GBK</td></tr>
+      <tr><td>性能</td><td>单文件处理，不做批量并发</td></tr>
+      <tr><td>平台</td><td>Windows 10/11，Chrome 最新版</td></tr>
+      <tr><td>可用性</td><td>插件关闭时零侵入、零拦截</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ======================= 8 ======================= -->
+<section id="s8">
+  <h2>8. 验收标准</h2>
+  <ol>
+    <li>插件开启时，输入框 / 剪贴板脱敏生效；关闭时不处理。</li>
+    <li>上传 <code>docx</code> / <code>xlsx</code> 前可生成本地脱敏副本，格式基本保留。</li>
+    <li><code>md</code>、<code>txt</code>、<code>csv</code>、<code>xml</code>、<code>yml</code>、<code>sql</code> 正确脱敏。</li>
+    <li>代码字符串、注释、标识符按规则处理，尽量可编译运行。</li>
+    <li>政治敏感词优先级最高，白名单规则符合确认结果。</li>
+    <li>输出文件名 <code>.redacted.ext</code>，不覆盖原文件。</li>
+    <li>运行时无网络请求，无遥测。</li>
+    <li>大模型接入、远程调用和可逆还原被明确排除；所有检测与替换结果均由插件本地生成。</li>
+    <li>支持 UTF-8、GBK 编码。</li>
+  </ol>
+</section>
+
+<!-- ======================= 9 ======================= -->
+<section id="s9">
+  <h2>9. 里程碑</h2>
+  <table>
+    <thead>
+      <tr><th>里程碑</th><th>内容</th><th>形态</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>M1</td><td>词库 JSON、文本脱敏、剪贴板脱敏、总开关</td><td>浏览器插件</td></tr>
+      <tr><td>M2</td><td><code>docx</code> / <code>xlsx</code> 上传前脱敏</td><td>浏览器插件</td></tr>
+      <tr><td>M3</td><td>代码文件脱敏（字符串 / 注释 / 标识符）</td><td>浏览器插件</td></tr>
+      <tr><td>M4</td><td>权限核查、离线验收、开发者模式手动加载发布</td><td>浏览器插件</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ======================= 10 ======================= -->
+<section id="s10">
+  <h2>10. 待确认问题</h2>
+  <div class="callout warn">
+    以下 4 项确认后，可输出 V1.0 定稿版需求文档，并拆解为开发任务清单。
+  </div>
+  <ol>
+    <li>政治敏感词命中时，白名单是否也不能豁免？</li>
+    <li>上传前脱敏：自动替换上传文件，还是提示用户确认后上传 / 下载？</li>
+    <li>第一版是否包含代码文件脱敏？支持哪些语言（如 JS、TS、Python、Java、Go）？</li>
+    <li>插件更新方式：Chrome 商店自动更新，还是开发者模式手动加载？</li>
+  </ol>
+</section>
+
+<!-- ======================= 附录 A ======================= -->
+<section id="appendix-a">
+  <h2>附录 A：讨论与确认问题记录</h2>
+  <p class="muted">按三轮沟通顺序整理。Q 为提问，A 为已确认回复。</p>
+
+  <h3>第一轮 · 需求初步理解与边界</h3>
+  <p><strong>目标：</strong>确认产品形态、用户、敏感范围、词库、脱敏方式、格式优先级、本地边界、输出、平台。</p>
+  <div class="qa-item">
+    <div class="qa-q">Q1：产品形态优先做哪种？</div>
+    <div class="qa-a">A：初步讨论为 CLI + 浏览器插件；后续已收敛为仅实现 Chrome 浏览器插件（见 Q28）。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q2：目标用户与是否需要统一词库、审计？</div>
+    <div class="qa-a">A：个人与小团队；需要统一词库；不需要审计。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q3：敏感内容范围？</div>
+    <div class="qa-a">A：手动维护白名单、API Key、手机号等 PII、政治合规词库、商业机密。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q4：词库与规则能力？</div>
+    <div class="qa-a">A：支持全部能力（正则、分组分级、优先级、白名单、大小写 / 全半角 / 简繁 / 变体 / 拼音 / 谐音）；白名单人工维护；政治敏感词内置且可新增。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q5：脱敏方式？</div>
+    <div class="qa-a">A：按内容区分——手机号保留长度掩码；公司名与敏感词替换为 <code>***</code>；不接入大模型，不做可逆还原扩展。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q6：文件格式优先级？</div>
+    <div class="qa-a">A：优先 <code>docx / doc / xls / xlsx / md / txt / csv / xml / yml / sql</code>；其次 PDF、压缩包、扫描识别文件。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q7：编程场景边界？</div>
+    <div class="qa-a">A：处理全文；脱敏后仍需可编译运行；不扫描 Git；不接 CI/CD。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q8：本地处理边界？</div>
+    <div class="qa-a">A：绝对不联网；词库手动导入更新；禁止遥测。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q9：输出与审计？</div>
+    <div class="qa-a">A：输出格式匹配输入；流进流出，文件进文件出；不做审计、不出报告。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q10：平台与性能？</div>
+    <div class="qa-a">A：先支持 Windows 与浏览器插件。</div>
+  </div>
+
+  <h3>第二轮 · 插件、词库、脱敏、文件细节</h3>
+  <div class="qa-item">
+    <div class="qa-q">Q11：插件核心功能？</div>
+    <div class="qa-a">A：包含 A（输入框 / 剪贴板脱敏）、C（上传文件前脱敏）、D（内置功能），共三项。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q12：支持的浏览器？</div>
+    <div class="qa-a">A：先支持 Chrome。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q13：词库如何导入导出？</div>
+    <div class="qa-a">A：手动导入 / 导出同一份 JSON 文件；不实现 CLI，也不提供本地服务或云端同步。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q14：大模型场景与插件拦截的关系？</div>
+    <div class="qa-a">A：已收敛——插件只做本地拦截与脱敏；不识别大模型场景，也不对接大模型。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q15：插件更新是否可联网？</div>
+    <div class="qa-a">A：插件更新可以联网。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q16：词库格式与团队共享方式？</div>
+    <div class="qa-a">A：JSON 存储；团队通过手动拷贝敏感词共享。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q17：优先级顺序？</div>
+    <div class="qa-a">A：政治敏感词优先级最高，然后才是白名单。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q18：第一版匹配能力范围？</div>
+    <div class="qa-a">A：先支持正则、大小写不敏感、全半角归一前三项。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q19：公司名与商业机密的识别方式？</div>
+    <div class="qa-a">A：使用本地关键字名单等，不使用联网或云端 NER。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q20：各类掩码确认？</div>
+    <div class="qa-a">A：手机号、身份证、邮箱掩码按方案执行；API Key 与政治敏感词全用 <code>*</code>。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q21：是否可逆？大模型还原是否第一版做？</div>
+    <div class="qa-a">A：本地脱敏不可逆；不对接大模型，不做反向还原。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q22：输出文件命名？</div>
+    <div class="qa-a">A：采用 <code>原文件名.redacted.ext</code> 方案，不覆盖原文件。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q23：流输入输出范围？</div>
+    <div class="qa-a">A：流输入输出仅文本；二进制文件走文件路径。</div>
+  </div>
+
+  <h3>第三轮 · 范围收敛与实现约束</h3>
+  <div class="qa-item">
+    <div class="qa-q">Q24：旧版 Office 格式是否第一版支持？</div>
+    <div class="qa-a">A：先支持 <code>docx</code> 与 <code>xlsx</code>；<code>doc</code> 与 <code>xls</code> 第一版先忽略。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q25：PDF 与压缩包？</div>
+    <div class="qa-a">A：PDF 和压缩包第一版先不支持。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q26：代码处理范围与策略？</div>
+    <div class="qa-a">A：先处理英文和中文；字符串、注释、标识符都需要处理；字符串 / 注释直接替换；标识符命中则安全重命名并同步引用，或提示人工确认；可编译运行优先。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q27：编码、文件数与并发？</div>
+    <div class="qa-a">A：先考虑 UTF-8 与 GBK；一次一个文件；并发先 5 个。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q28：最终实现形态是什么？</div>
+    <div class="qa-a">A：仅实现 Chrome 浏览器插件；CLI 不在本方案范围内。</div>
+  </div>
+  <div class="qa-item">
+    <div class="qa-q">Q29：验收关键场景？</div>
+    <div class="qa-a">A：与第二版方案一致（详见第 8 章验收标准）。</div>
+  </div>
+
+  <h3>尚未闭环的 6 个问题</h3>
+  <ol>
+    <li>政治敏感词命中时白名单是否豁免。</li>
+    <li>上传前脱敏：自动替换 vs 用户确认。</li>
+    <li>第一版代码文件支持的语言清单。</li>
+    <li>「一次一个文件」与「并发 5」的适用范围。</li>
+    <li>插件更新方式：商店 vs 开发者模式。</li>
+  </ol>
+</section>
+
+<!-- ======================= 附录 B ======================= -->
+<section id="appendix-b">
+  <h2>附录 B：架构决策记录（ADR）</h2>
+  <p>以下 ADR 记录本轮讨论中已确认的关键架构与策略决策。状态为「已接受」的表示双方已确认；「待定」的表示仍需业务方最终拍板。</p>
+
+  <!-- ADR-001 -->
+  <div class="adr">
+    <span class="status">已接受</span>
+    <h4>ADR-001：仅实现 Chrome 浏览器插件，不做 CLI</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>最初设想为 CLI + 浏览器插件双形态，但需求后续要求只交付浏览器插件。</dd>
+      <dt>决策</dt>
+      <dd>只实现 Chrome 浏览器插件；CLI、桌面客户端和云端服务均不实现。</dd>
+      <dt>理由</dt>
+      <dd>浏览器插件能覆盖剪贴板、输入框、上传前脱敏等高频办公场景，落地快且能严格限制在本地方案内。</dd>
+      <dt>影响</dt>
+      <dd>不做批量并发；插件内单次处理一个文件。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-002 -->
+  <div class="adr">
+    <span class="status">已接受</span>
+    <h4>ADR-002：运行时绝对不联网，禁止遥测</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>敏感文件与词库不能离开本地，用户对数据外泄风险高度敏感。</dd>
+      <dt>决策</dt>
+      <dd>插件运行时禁止任何网络请求与遥测上报；仅插件更新允许联网。</dd>
+      <dt>理由</dt>
+      <dd>零网络请求是最强隐私保证，也便于通过企业安全审查。</dd>
+      <dt>影响</dt>
+      <dd>不能用云端词库同步、云端 NER、云端 OCR；词库共享必须手动拷贝 JSON。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-003 -->
+  <div class="adr">
+    <span class="status">已接受</span>
+    <h4>ADR-003：词库采用本地 JSON，手动拷贝共享</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>小团队需要统一词库，但禁止联网排除了云端同步方案。</dd>
+      <dt>决策</dt>
+      <dd>词库以 JSON 文件本地存储；团队通过手动拷贝同一份 JSON 实现共享。</dd>
+      <dt>理由</dt>
+      <dd>JSON 可读、可版本管理、可人工审查；无需服务端。</dd>
+      <dt>影响</dt>
+      <dd>需要定义清晰的 JSON Schema 与版本号字段；词库冲突需人工处理。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-004 -->
+  <div class="adr">
+    <span class="status">已接受</span>
+    <h4>ADR-004：词库通过本地 JSON 手动导入导出</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>可选方案包括本地服务、Native Messaging 和手动文件导入导出。</dd>
+      <dt>决策</dt>
+      <dd>采用「手动导入同一份词库文件」方案。</dd>
+      <dt>理由</dt>
+      <dd>无网络请求、无本地服务、实现简单，符合离线约束。</dd>
+      <dt>影响</dt>
+      <dd>词库更新后需用户手动重新导入；不提供跨工具实时同步。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-005 -->
+  <div class="adr">
+    <span class="status">已接受</span>
+    <h4>ADR-005：优先级为「政治敏感词 &gt; 白名单 &gt; 普通敏感词」</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>白名单与政治敏感词可能冲突，需要明确谁优先。</dd>
+      <dt>决策</dt>
+      <dd>政治敏感词优先级最高，其次白名单，最后普通敏感词、正则、公司名与商业机密。</dd>
+      <dt>理由</dt>
+      <dd>政治合规属最高风险等级，不允许被白名单豁免。</dd>
+      <dt>影响</dt>
+      <dd>命中政治词时直接脱敏，白名单不生效；需在引擎中实现分级短路逻辑。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-006 -->
+  <div class="adr">
+    <span class="status">已接受</span>
+    <h4>ADR-006：脱敏策略按内容类型区分，而非统一替换</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>统一替换为 <code>***</code> 会破坏可读性与部分业务可用性。</dd>
+      <dt>决策</dt>
+      <dd>手机号、身份证、邮箱保留长度掩码；API Key 与政治敏感词逐字符替换为 <code>*</code>；公司名、商业机密与普通敏感词替换为 <code>***</code>。</dd>
+      <dt>理由</dt>
+      <dd>在保护隐私的同时，尽量保留格式与可读性。</dd>
+      <dt>影响</dt>
+      <dd>需要按规则配置掩码类型（<code>phone</code> / <code>idcard</code> / <code>email</code> / <code>char</code> / <code>star3</code>）。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-007 -->
+  <div class="adr">
+    <span class="status">已接受</span>
+    <h4>ADR-007：第一版文件格式范围为 docx / xlsx / md / txt / csv / xml / yml / sql</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>格式支持成本差异大，PDF、旧版 Office、压缩包解析复杂。</dd>
+      <dt>决策</dt>
+      <dd>第一版支持 <code>docx</code>、<code>xlsx</code>、<code>md</code>、<code>txt</code>、<code>csv</code>、<code>xml</code>、<code>yml</code>、<code>sql</code>；排除 <code>doc</code>、<code>xls</code>、PDF、压缩包、扫描件。</dd>
+      <dt>理由</dt>
+      <dd>这些格式覆盖绝大多数办公与开发日常场景，且解析库成熟。</dd>
+      <dt>影响</dt>
+      <dd>PDF 重排、OCR、压缩包递归等能力放到后续版本。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-008 -->
+  <div class="adr">
+    <span class="status">已接受</span>
+    <h4>ADR-008：代码脱敏以「可编译运行优先」，标识符安全重命名</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>直接把标识符替换为 <code>***</code> 会导致语法错误、无法编译。</dd>
+      <dt>决策</dt>
+      <dd>字符串与注释直接替换；标识符命中时安全重命名并同步引用；无法安全处理时提示人工确认。</dd>
+      <dt>理由</dt>
+      <dd>保证脱敏后代码仍可编译运行，避免破坏开发流程。</dd>
+      <dt>影响</dt>
+      <dd>需要按语言实现作用域分析与引用同步；第一版需明确支持的语言清单。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-009 -->
+  <div class="adr">
+    <span class="status">已接受</span>
+    <h4>ADR-009：不对接大模型，不做可逆还原</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>可逆映射涉及映射表生命周期、多轮对话、流式返回等复杂问题。</dd>
+      <dt>决策</dt>
+      <dd>不接入大模型，不实现请求掩码、返回反向替换和可逆还原。</dd>
+      <dt>理由</dt>
+      <dd>聚焦核心脱敏能力，降低第一版复杂度。</dd>
+      <dt>影响</dt>
+      <dd>脱敏结果保持一次性输出，不维护映射表，降低数据残留和还原风险。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-010 -->
+  <div class="adr">
+    <span class="status">已接受</span>
+    <h4>ADR-010：文本流式处理，二进制文件走文件路径</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>Office 等二进制格式无法简单流式处理。</dd>
+      <dt>决策</dt>
+      <dd>文本类支持流进流出；<code>docx</code>、<code>xlsx</code> 等二进制文件走文件输入输出。</dd>
+      <dt>理由</dt>
+      <dd>匹配真实使用场景，降低实现复杂度。</dd>
+      <dt>影响</dt>
+      <dd>插件内文本在工作台或输入框处理；二进制文件按本地副本生成。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-011 -->
+  <div class="adr">
+    <span class="status">已接受</span>
+    <h4>ADR-011：输出不覆盖原文件，命名 <code>原文件名.redacted.ext</code></h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>脱敏结果需要可追溯、可回滚。</dd>
+      <dt>决策</dt>
+      <dd>默认另存为 <code>原文件名.redacted.ext</code>，不修改原文件。</dd>
+      <dt>理由</dt>
+      <dd>避免误操作导致原始数据丢失。</dd>
+      <dt>影响</dt>
+      <dd>批量处理时需处理同名冲突策略（后续确认）。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-012 -->
+  <div class="adr">
+    <span class="status">已接受</span>
+    <h4>ADR-012：插件关闭时零注入、零拦截</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>用户可能只想在特定场景启用脱敏，而非全程拦截。</dd>
+      <dt>决策</dt>
+      <dd>插件关闭时不注入脚本、不拦截请求、不处理任何页面内容。</dd>
+      <dt>理由</dt>
+      <dd>尊重用户控制权，降低对正常浏览的干扰。</dd>
+      <dt>影响</dt>
+      <dd>需要明确的总开关状态管理与页面注入时机。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-013 -->
+  <div class="adr">
+    <span class="status">已接受</span>
+    <h4>ADR-013：编码支持 UTF-8 与 GBK，单文件处理</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>Windows 环境下 GBK 文件仍常见，需兼容。</dd>
+      <dt>决策</dt>
+      <dd>支持 UTF-8 与 GBK；单次任务一次处理一个文件。</dd>
+      <dt>理由</dt>
+      <dd>覆盖主流中文编码；并发上限兼顾性能与稳定性。</dd>
+      <dt>影响</dt>
+      <dd>需做编码探测与回退策略；并发能力不在本方案范围。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-014 -->
+  <div class="adr">
+    <span class="status">已接受</span>
+    <h4>ADR-014：不做审计、报告、Git 扫描与 CI/CD 集成</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>目标用户为个人与小团队，无合规审计诉求。</dd>
+      <dt>决策</dt>
+      <dd>第一版不实现审计日志、命中报告、Git 仓库扫描、CI/CD 集成。</dd>
+      <dt>理由</dt>
+      <dd>减少范围，聚焦核心脱敏体验。</dd>
+      <dt>影响</dt>
+      <dd>不在插件中展示审计报告，也不提供退出码类批处理接口。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-015 -->
+  <div class="adr">
+    <span class="status">已接受</span>
+    <h4>ADR-015：D 功能定义为「本地脱敏工作台」而非「内置聊天窗口」</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>用户确认插件包含 A、C、D 三项功能，其中 D 原描述可能为内置聊天窗口。</dd>
+      <dt>决策（建议）</dt>
+      <dd>D 定义为「本地脱敏工作台」：粘贴文本或拖拽文件，本地脱敏后复制或下载。</dd>
+      <dt>理由</dt>
+      <dd>与「不对接大模型、不做可逆还原」的决策一致，避免引入不必要的聊天与网络能力。</dd>
+      <dt>影响</dt>
+      <dd>不添加聊天会话、远程推理和模型接入；后续如需这些能力应另立方案。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-016 -->
+  <div class="adr">
+    <span class="status proposed">待定</span>
+    <h4>ADR-016：政治敏感词命中时白名单不豁免</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>优先级已定为「政治敏感词 &gt; 白名单」，但未明确政治词是否可被白名单豁免。</dd>
+      <dt>决策（建议）</dt>
+      <dd>政治敏感词命中即脱敏，白名单不生效。</dd>
+      <dt>理由</dt>
+      <dd>政治合规为最高风险等级，应保持绝对优先级。</dd>
+      <dt>影响</dt>
+      <dd>引擎需实现「政治词短路」逻辑，白名单校验在其后执行。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-017 -->
+  <div class="adr">
+    <span class="status proposed">待定</span>
+    <h4>ADR-017：上传前脱敏采用「用户确认后上传 / 下载」而非静默替换</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>上传控件行为差异大，静默替换存在误操作与数据丢失风险。</dd>
+      <dt>决策（建议）</dt>
+      <dd>检测到上传时弹出确认，用户选择上传脱敏副本或下载脱敏副本。</dd>
+      <dt>理由</dt>
+      <dd>透明可控，避免误替换原始上传内容。</dd>
+      <dt>影响</dt>
+      <dd>需要设计插件弹窗交互与文件替换策略。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-018 -->
+  <div class="adr">
+    <span class="status proposed">待定</span>
+    <h4>ADR-018：第一版代码文件支持语言清单</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>代码脱敏需要按语言实现语法解析与引用同步，语言数量直接影响工作量。</dd>
+      <dt>决策（建议）</dt>
+      <dd>第一版优先支持 JS / TS、Python、Java、Go 四类；其余语言按文本规则处理字符串与注释。</dd>
+      <dt>理由</dt>
+      <dd>覆盖主流开发场景，同时控制解析器实现成本。</dd>
+      <dt>影响</dt>
+      <dd>需引入或自研轻量解析器；未支持语言的标识符命中走人工确认。</dd>
+    </dl>
+  </div>
+
+  <!-- ADR-019 -->
+  <div class="adr">
+    <span class="status proposed">待定</span>
+    <h4>ADR-019：插件更新方式</h4>
+    <dl>
+      <dt>背景</dt>
+      <dd>Chrome 商店自动更新与开发者模式手动加载，影响分发与合规审查。</dd>
+      <dt>决策（建议）</dt>
+      <dd>第一版以开发者模式手动加载为主，稳定后上架 Chrome 商店。</dd>
+      <dt>理由</dt>
+      <dd>早期迭代快，便于小团队内部试用。</dd>
+      <dt>影响</dt>
+      <dd>需明确更新频率与版本号规范。</dd>
+    </dl>
+  </div>
+</section>
+
+<footer class="doc-footer">
+  本地敏感词过滤与脱敏工具 · 需求文档 V0.2 · 范围收敛稿<br>
+  确认 4 项待定问题后可输出 V1.0 定稿版
+</footer>
+
+</div>
+</body>
+</html>

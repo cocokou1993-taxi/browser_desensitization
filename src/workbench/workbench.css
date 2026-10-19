@@ -1,0 +1,194 @@
+:root {
+  color: #1f2328;
+  font-family: system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: #f5f7f8;
+}
+
+header {
+  display: flex;
+  min-height: 84px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  background: #fff;
+  border-bottom: 1px solid #d9dfe5;
+}
+
+h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+header p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #0f5c46;
+}
+
+button {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  background: #fff;
+  color: #1f2328;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: #eef1f4;
+}
+
+button:disabled {
+  color: #8c9199;
+  cursor: not-allowed;
+}
+
+.primary {
+  background: #0f5c46;
+  border-color: #0f5c46;
+  color: #fff;
+}
+
+.primary:hover:not(:disabled) {
+  background: #0b4a39;
+}
+
+main {
+  display: grid;
+  grid-template-columns: minmax(320px, 1.4fr) minmax(280px, 1fr);
+  gap: 24px;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 24px 32px 40px;
+}
+
+section {
+  min-width: 0;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+textarea,
+output {
+  display: block;
+  width: 100%;
+  min-height: 330px;
+  padding: 14px;
+  overflow: auto;
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  background: #fff;
+  font: 13px/1.6 ui-monospace, monospace;
+  white-space: pre-wrap;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+#status {
+  min-height: 20px;
+  margin: 10px 0 0;
+  color: #0f5c46;
+  font-size: 13px;
+}
+
+#dropzone {
+  display: grid;
+  min-height: 210px;
+  place-content: center;
+  gap: 8px;
+  padding: 24px;
+  border: 1px dashed #9ca3af;
+  border-radius: 4px;
+  background: #fff;
+  text-align: center;
+  outline-offset: 2px;
+  cursor: pointer;
+}
+
+#dropzone.is-active {
+  border-color: #0f5c46;
+  background: #edf7f3;
+}
+
+#dropzone span {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+#dropzone small {
+  max-width: 300px;
+  color: #57606a;
+  font-size: 12px;
+}
+
+#file-results {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+#file-results li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 13px;
+}
+
+#file-results strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#file-results small {
+  flex: 0 0 auto;
+  color: #57606a;
+}
+
+@media (max-width: 760px) {
+  header,
+  main {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  main {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding-bottom: 28px;
+  }
+
+  textarea,
+  output {
+    min-height: 260px;
+  }
+}

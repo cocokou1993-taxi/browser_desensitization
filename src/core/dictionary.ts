@@ -1,0 +1,151 @@
+// Generated from dictionary.example.json by scripts/sync-dictionary.mjs.
+import { parseDictionaryConfig } from './config.ts';
+import type { CompactDictionaryConfig } from './types.ts';
+
+const SOURCE: CompactDictionaryConfig = {
+  "schema": "compact-v1",
+  "version": "1.0.0",
+  "updatedAt": "2026-10-19",
+  "defaults": {
+    "type": "keyword",
+    "mask": "char"
+  },
+  "groups": [
+    {
+      "id": "political-official",
+      "name": "政治与机构用语",
+      "priority": 100,
+      "builtin": true,
+      "keywords": [
+        "习近平",
+        "索饭",
+        "任豚",
+        "罪犯"
+      ]
+    },
+    {
+      "id": "political-ethnic",
+      "name": "民族与群体称谓",
+      "priority": 100,
+      "builtin": true,
+      "keywords": [
+        "回回",
+        "蛮子",
+        "蒙族",
+        "维族",
+        "哈萨",
+        "蒙古大夫",
+        "摩梭族",
+        "撒尼族",
+        "穿青族",
+        "僜族",
+        "高丽",
+        "突厥族",
+        "突厥人"
+      ]
+    },
+    {
+      "id": "political-territory",
+      "name": "领土与两岸表述",
+      "priority": 100,
+      "builtin": true,
+      "keywords": [
+        "福摩萨",
+        "斯普拉特利群岛",
+        "尖阁群岛",
+        "东突厥斯坦"
+      ]
+    },
+    {
+      "id": "political-international",
+      "name": "国际与外交用语",
+      "priority": 100,
+      "builtin": true,
+      "keywords": [
+        "北朝鲜",
+        "穆斯林国家",
+        "穆斯林世界",
+        "阿拉伯民兵",
+        "黑人歹徒",
+        "伊斯兰原教旨主义",
+        "伊斯兰原教旨主义者",
+        "十字军",
+        "斩首",
+        "击毙",
+        "黑非洲"
+      ]
+    },
+    {
+      "id": "discriminatory-language",
+      "name": "歧视与贬损称谓",
+      "priority": 90,
+      "builtin": true,
+      "keywords": [
+        "残废人",
+        "独眼龙",
+        "瞎子",
+        "聋子",
+        "傻子",
+        "呆子",
+        "傻B",
+        "弱智",
+        "傻瓜",
+        "傻X"
+      ]
+    },
+    {
+      "id": "advertising-medical",
+      "name": "广告与医疗用语",
+      "priority": 80,
+      "builtin": true,
+      "keywords": [
+        "最佳",
+        "最好",
+        "最著名",
+        "疗效最佳",
+        "根治",
+        "安全预防",
+        "安全无副作用",
+        "药到病除",
+        "无效退款",
+        "保险公司保险",
+        "最新技术",
+        "最高技术",
+        "最先进制法",
+        "药之王",
+        "国家级新药"
+      ]
+    },
+    {
+      "id": "offensive-language",
+      "name": "粗俗与网络用语",
+      "priority": 80,
+      "builtin": true,
+      "keywords": [
+        "妈的",
+        "SB",
+        "TMD",
+        "NB"
+      ]
+    },
+    {
+      "id": "business-compliance",
+      "name": "业务合规词库",
+      "priority": 20,
+      "builtin": true,
+      "mask": "star3",
+      "keywords": [
+        "中石油",
+        "工资",
+        "奖金",
+        "红星"
+      ]
+    }
+  ],
+  "whitelist": [
+    "可保留的业务词"
+  ],
+  "customKeywords": []
+};
+
+export const DEFAULT_DICTIONARY = parseDictionaryConfig(SOURCE);

@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "本地敏感词脱敏助手",
+  "version": "0.3.0",
+  "description": "本地敏感词检测与脱敏。不对接大模型，不发起网络请求，不上传文本或文件。",
+  "minimum_chrome_version": "116",
+  "permissions": ["storage", "clipboardWrite"],
+  "action": {
+    "default_title": "本地敏感词脱敏助手",
+    "default_popup": "popup.html"
+  },
+  "options_page": "workbench.html",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_about_blank": true
+    }
+  ]
+}
